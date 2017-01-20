@@ -16,10 +16,10 @@ function respondTrackToSpotify(hook, user, track, thumb) {
   request.post(
     hook,
     { json: {
+              "username": user,
               "attachments": [
                 {
-                  "fallback"  : user + ': ' + track,
-                  "pretext"   : user + ':',
+                  "fallback"  : track,
                   "title"     : track,
                   "thumb_url" : thumb
                 }
@@ -92,7 +92,7 @@ app.post('/store', function(req, res) {
           var track = results[0];
           spotifyApi.addTracksToPlaylist(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID, ['spotify:track:' + track.id])
             .then(function(data) {
-              respondTrackToSpotify(process.env.SPOTIFY_HOOK_PLAYLIST, req.body.user_name, '*' + track.name + '* by *' + track.artists[0].name + '*', track.album.images[0].url)
+              respondTrackToSpotify(process.env.SPOTIFY_HOOK_PLAYLIST, req.body.user_name, track.name + ' by ' + track.artists[0].name, track.album.images[0].url)
               return res.send('Track added: *' + track.name + '* by *' + track.artists[0].name + '*');
             }, function(err) {
               return res.send(err.message);
