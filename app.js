@@ -12,6 +12,13 @@ var spotifyApi = new SpotifyWebApi({
   redirectUri  : process.env.SPOTIFY_REDIRECT_URI
 });
 
+function respondToSpotify(hook, message) {
+  request.post(
+    hook,
+    { json: {"text": message} }
+  );
+}
+
 var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -54,7 +61,7 @@ app.post('/store', function(req, res) {
   spotifyApi.refreshAccessToken()
     .then(function(data) {
       spotifyApi.setAccessToken(data.body['access_token']);
-      if (data.body['refresh_token']) { 
+      if (data.body['refresh_token']) {
         spotifyApi.setRefreshToken(data.body['refresh_token']);
       }
       if (req.body.text.trim().length === 0) {
@@ -62,7 +69,7 @@ app.post('/store', function(req, res) {
       }
       if (req.body.text.indexOf(' - ') === -1) {
         var query = 'track:' + req.body.text;
-      } else { 
+      } else {
         var pieces = req.body.text.split(' - ');
         var query = 'artist:' + pieces[0].trim() + ' track:' + pieces[1].trim();
       }
@@ -75,6 +82,7 @@ app.post('/store', function(req, res) {
           var track = results[0];
           spotifyApi.addTracksToPlaylist(process.env.SPOTIFY_USERNAME, process.env.SPOTIFY_PLAYLIST_ID, ['spotify:track:' + track.id])
             .then(function(data) {
+              respondToSpotify(process.env.SPOTIFY_HOOK_PLAYLIST, req.body.user_name + ': *' + track.name + '* by *' + track.artists[0].name + '*')
               return res.send('Track added: *' + track.name + '* by *' + track.artists[0].name + '*');
             }, function(err) {
               return res.send(err.message);
